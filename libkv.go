@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/docker/libkv/store"
 )
@@ -13,6 +14,7 @@ type Initialize func(addrs []string, options *store.Config) (store.Store, error)
 
 var (
 	// Backend initializers
+	initLock     sync.RWMutex
 	initializers = make(map[store.Backend]Initialize)
 
 	supportedBackend = func() string {
@@ -27,6 +29,8 @@ var (
 
 // NewStore creates an instance of store
 func NewStore(backend store.Backend, addrs []string, options *store.Config) (store.Store, error) {
+	initLock.Lock()
+	defer initLock.Unlock()
 	if init, exists := initializers[backend]; exists {
 		return init(addrs, options)
 	}
@@ -36,5 +40,7 @@ func NewStore(backend store.Backend, addrs []string, options *store.Config) (sto
 
 // AddStore adds a new store backend to libkv
 func AddStore(store store.Backend, init Initialize) {
+	initLock.Lock()
+	defer initLock.Unlock()
 	initializers[store] = init
 }

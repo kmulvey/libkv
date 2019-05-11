@@ -6,6 +6,7 @@ go:
   - "1.10"
   - 1.11.x
   - 1.12.x
+  - master
 
 # let us have speedy Docker-based Travis workers
 sudo: false
@@ -29,7 +30,7 @@ script:
   - ./zk/bin/zkServer.sh start ./zk/conf/zoo.cfg 1> /dev/null
   - script/validate-gofmt
   - go vet ./...
-  - fgt golint ./...
+  - golint `go list ./... | grep -v /vendor/`
   - go test -v -race ./...
-  - script/coverage
-  - goveralls -service=travis-ci -coverprofile=goverage.report
+    #- script/coverage
+    #- goveralls -service=travis-ci -coverprofile=goverage.report
